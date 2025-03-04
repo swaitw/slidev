@@ -1,29 +1,22 @@
-import type { SlidevConfig } from '@slidev/types'
-import { computed } from 'vue'
+import configs from '#slidev/configs'
 import { objectMap } from '@antfu/utils'
-// @ts-expect-error missing types
-import _configs from '/@slidev/configs'
-import _serverState from 'server-reactive:nav'
-import _serverDrawingState from 'server-reactive:drawings?diff'
-import type { ServerReactive } from 'vite-plugin-vue-server-ref'
+import { computed } from 'vue'
 
-export interface ServerState {
-  page: number
-  clicks: number
-  cursor?: {
-    x: number
-    y: number
-  }
-}
+export { configs }
 
-export const serverState = _serverState as ServerReactive<ServerState>
-export const serverDrawingState = _serverDrawingState as ServerReactive<Record<number, string | undefined>>
-export const configs = _configs as SlidevConfig
+export const mode = __DEV__ ? 'dev' : 'build'
 
-export const slideAspect = configs.aspectRatio ?? (16 / 9)
-export const slideWidth = configs.canvasWidth ?? 980
-export const slideHeight = Math.round(slideWidth / slideAspect)
+export const slideAspect = computed(() => configs.aspectRatio)
+export const slideWidth = computed(() => configs.canvasWidth)
+
+// To honor the aspect ratio more as possible, we need to approximate the height to the next integer.
+// Doing this, we will prevent on print, to create an additional empty white page after each page.
+export const slideHeight = computed(() => Math.ceil(slideWidth.value / slideAspect.value))
 
 export const themeVars = computed(() => {
   return objectMap(configs.themeConfig || {}, (k, v) => [`--slidev-theme-${k}`, v])
 })
+
+export const slidesTitle = configs.slidesTitle
+
+export const pathPrefix = import.meta.env.BASE_URL + (__SLIDEV_HASH_ROUTE__ ? '#/' : '')
